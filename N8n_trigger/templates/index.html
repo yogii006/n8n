@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>n8n Webhook Trigger</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f6f8;
+            text-align: center;
+        }
+        form {
+            background: white;
+            padding: 30px;
+            display: inline-block;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        input {
+            padding: 10px;
+            margin: 4px;
+            width: 260px;
+        }
+        button {
+            padding: 10px 20px;
+            background: #ff6d5a;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #e65a4a;
+        }
+        .response-ok {
+            margin-top: 20px;
+            color: green;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .bad-response {
+            margin-top: 20px;
+            color: red;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Trigger n8n Webhook</h2>
+
+    <form method="POST">
+        <p>Enter your details</p>
+        <input type="text" name="name" placeholder="Enter Name" required><br> 
+        <input type="email" name="email" placeholder="Enter Email" required><br>
+        <input type="text" name="username" placeholder="Webhook Username" required><br>
+        <input type="password" name="password" placeholder="Webhook Password" required><br>
+        <p>Enter File Details</p>
+        <input type="text" name="filename" placeholder="Enter File Name" required><br>
+        <input 
+            type="text" 
+            name="directory" 
+            placeholder="Enter Directory Path (default: /home/node/.n8n-files/videos)"
+        ><br>
+        <input type="text" name="description" placeholder="Enter Description" required><br>
+        <button type="submit">Trigger Workflow</button>
+    </form>
+
+
+    {% if message == "Workflow triggered successfully!" %}
+        <div class="response-ok">
+            <p>{{ message }}</p>
+        </div>
+    {% elif message != "" %}
+        <div class="bad-response">
+            <p>{{ message }}</p>
+        </div>
+    {% endif %}
+
+</body>
+</html>
