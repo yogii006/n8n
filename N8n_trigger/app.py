@@ -5,7 +5,7 @@ import datetime
 import os
 app = Flask(__name__)
 
-WEBHOOK_URL = "http://localhost:5678/webhook-test/4151a4d9-a106-4be4-99c3-3b45f81aae94"
+WEBHOOK_URL = "https://zincic-cavilingly-lonna.ngrok-free.dev/webhook-test/4151a4d9-a106-4be4-99c3-3b45f81aae94"
 
 @app.route("/", methods=["GET", "POST"])
 def home():
