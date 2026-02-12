@@ -1,48 +1,88 @@
 from flask import Flask, render_template, request
+from supabase import create_client, Client
 import requests
 from requests.auth import HTTPBasicAuth
 import datetime
 import os
+import time
+from dotenv import load_dotenv
+
 app = Flask(__name__)
 
-WEBHOOK_URL = "https://zincic-cavilingly-lonna.ngrok-free.dev/webhook-test/4151a4d9-a106-4be4-99c3-3b45f81aae94"
+# Load environment variables
+load_dotenv()
+
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")
+
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+BUCKET_NAME = "videos"
 
 @app.route("/", methods=["GET", "POST"])
 def home():
     message = ""
 
     if request.method == "POST":
+
         name = request.form.get("name")
         email = request.form.get("email")
-        filename = request.form.get("filename")
-        directory = request.form.get("directory")
         description = request.form.get("description")
         username = request.form.get("username")
         password = request.form.get("password")
 
-        # ✅ Fallback logic
-        if not directory or directory.strip() == "":
-            directory = "/home/node/.n8n-files/videos"
+        if "video" not in request.files:
+            return render_template("index.html", message="No video uploaded")
+
+        file = request.files["video"]
+
+        if file.filename == "":
+            return render_template("index.html", message="Empty filename")
+
         try:
+            filename = file.filename  # keep original filename
+
+            # -------------------------
+            # 1️⃣ Upload To Supabase
+            # -------------------------
+            supabase.storage.from_(BUCKET_NAME).upload(
+                filename,
+                file.read(),
+                {"content-type": file.content_type}
+            )
+
+            file_url = supabase.storage.from_(BUCKET_NAME).get_public_url(filename)
+
+            # -------------------------
+            # 2️⃣ Wait 2 seconds
+            # -------------------------
+            time.sleep(2)
+
+            # -------------------------
+            # 3️⃣ Send To n8n Webhook
+            # -------------------------
             response = requests.post(
                 WEBHOOK_URL,
                 json={
                     "name": name,
                     "email": email,
-                    "filename": filename,
-                    "directory": directory,
                     "description": description,
+                    "video_url": file_url,
+                    "video_filename": filename,
                     "time": datetime.datetime.now().isoformat()
                 },
-                auth=HTTPBasicAuth(username, password),   
+                auth=HTTPBasicAuth(username, password),
+                timeout=15
             )
-            print(response.status_code)
+
             if response.status_code == 200:
-                message = "Workflow triggered successfully!"
+                message = "Upload complete & Workflow triggered successfully!"
             elif response.status_code in [401, 403]:
                 message = "Invalid credentials. Access denied."
             else:
-                message = "something went wrong"
+                message = f"n8n Error: {response.status_code}"
+
         except Exception as e:
             message = f"Error: {str(e)}"
 
