@@ -2,7 +2,7 @@ from flask import Flask, render_template, request
 import requests
 from requests.auth import HTTPBasicAuth
 import datetime
-
+import os
 app = Flask(__name__)
 
 WEBHOOK_URL = "http://localhost:5678/webhook-test/4151a4d9-a106-4be4-99c3-3b45f81aae94"
@@ -48,6 +48,6 @@ def home():
 
     return render_template("index.html", message=message)
 
-
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
